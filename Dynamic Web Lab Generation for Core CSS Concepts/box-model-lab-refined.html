@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Box Model Lab (refined)</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; color: #222; }
+    h1 { margin-top: 0; }
+    .layout { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
+    .controls { background: #fff; padding: 15px; border: 1px solid #ccc; border-radius: 6px; width: 340px; }
+    fieldset { border: 1px solid #ddd; margin-bottom: 10px; }
+    legend { font-weight: bold; }
+    .row { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
+    .row .name { width: 55px; }
+    .row input { flex: 1; }
+    .row output { width: 42px; text-align: right; }
+    .stage { flex: 1; min-width: 300px; background: #fff; border: 1px dashed #999; padding: 10px; }
+    .margin-area { background: #f9cc9d; display: flow-root; }
+    .box {
+      /* content colour clipped to the content box, padding colour under it */
+      background: linear-gradient(#8cb6c0, #8cb6c0) content-box, #c3d08b padding-box;
+      border-style: solid;
+      border-color: #222;
+      display: block;
+    }
+    .legend span { display: inline-block; padding: 2px 8px; margin-right: 6px; }
+    pre { background: #222; color: #9f9; padding: 10px; font-size: 13px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>CSS Box Model Lab (refined)</h1>
+  <p class="legend">
+    <span style="background:#8cb6c0">content</span>
+    <span style="background:#c3d08b">padding</span>
+    <span style="background:#222;color:#fff">border</span>
+    <span style="background:#f9cc9d">margin</span>
+  </p>
+
+  <div class="layout">
+    <div class="controls" id="controls">
+      <fieldset id="margin"><legend>Margin</legend></fieldset>
+      <fieldset id="padding"><legend>Padding</legend></fieldset>
+      <fieldset id="border"><legend>Border width</legend></fieldset>
+      <fieldset><legend>Other</legend>
+        <div class="row"><span class="name">radius</span>
+          <input type="range" id="radius" min="0" max="80" value="0"><output id="radiusOut">0px</output></div>
+        <div class="row"><span class="name">width</span>
+          <input type="range" id="width" min="50" max="400" value="150"><output id="widthOut">150px</output></div>
+        <div class="row"><span class="name">display</span>
+          <select id="display">
+            <option value="block">block</option>
+            <option value="inline-block">inline-block</option>
+            <option value="inline">inline</option>
+          </select></div>
+      </fieldset>
+      <button id="reset">Reset</button>
+    </div>
+
+    <div class="stage">
+      <div class="margin-area"><div class="box" id="box1">Box 1</div></div>
+      <div class="margin-area"><div class="box" id="box2">Box 2</div></div>
+      <p>Current CSS for both boxes:</p>
+      <pre id="css"></pre>
+    </div>
+  </div>
+
+  <script>
+    const sides = ['Top', 'Right', 'Bottom', 'Left'];
+    const defaults = { margin: 20, padding: 20, border: 5 };
+    const max = { margin: 60, padding: 60, border: 20 };
+    const boxes = [...document.querySelectorAll('.box')];
+    const wrappers = [...document.querySelectorAll('.margin-area')];
+
+    // four sliders (top/right/bottom/left) for margin, padding and border
+    for (const group of ['margin', 'padding', 'border']) {
+      const fs = document.getElementById(group);
+      for (const side of sides) {
+        const id = group + side;
+        fs.insertAdjacentHTML('beforeend',
+          '<div class="row"><span class="name">' + side.toLowerCase() + '</span>' +
+          '<input type="range" id="' + id + '" min="0" max="' + max[group] + '" value="' + defaults[group] + '">' +
+          '<output id="' + id + 'Out">' + defaults[group] + 'px</output></div>');
+      }
+    }
+
+    function val(id) { return document.getElementById(id).value + 'px'; }
+
+    function update() {
+      const css = [];
+      for (const side of sides) {
+        const s = side.toLowerCase();
+        css.push('margin-' + s + ': ' + val('margin' + side) + ';');
+        css.push('padding-' + s + ': ' + val('padding' + side) + ';');
+        css.push('border-' + s + '-width: ' + val('border' + side) + ';');
+      }
+      const display = document.getElementById('display').value;
+      css.push('border-radius: ' + val('radius') + ';');
+      css.push('width: ' + val('width') + ';');
+      css.push('display: ' + display + ';');
+
+      boxes.forEach(b => {
+        for (const side of sides) {
+          b.style['margin' + side] = val('margin' + side);
+          b.style['padding' + side] = val('padding' + side);
+          b.style['border' + side + 'Width'] = val('border' + side);
+        }
+        b.style.borderRadius = val('radius');
+        b.style.width = val('width');
+        b.style.display = display;
+      });
+      wrappers.forEach(w => w.style.display = display === 'block' ? 'flow-root' : 'inline-block');
+
+      document.querySelectorAll('#controls input[type=range]').forEach(i =>
+        document.getElementById(i.id + 'Out').textContent = i.value + 'px');
+      document.getElementById('css').textContent = '.box {\n  ' + css.join('\n  ') + '\n}';
+    }
+
+    document.getElementById('controls').addEventListener('input', update);
+    document.getElementById('reset').addEventListener('click', () => {
+      for (const g of ['margin', 'padding', 'border'])
+        sides.forEach(s => document.getElementById(g + s).value = defaults[g]);
+      document.getElementById('radius').value = 0;
+      document.getElementById('width').value = 150;
+      document.getElementById('display').value = 'block';
+      update();
+    });
+    update();
+  </script>
+</body>
+</html>
